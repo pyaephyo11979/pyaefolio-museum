@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>PyaeFolio 3D Museum — Pyae Phyo Hlaing Interactive Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles/main.css" />
+  </head>
+  <body>
+    <!-- BabylonJS 3D Canvas -->
+    <canvas id="renderCanvas" aria-label="PyaeFolio 3D Interactive Museum Canvas"></canvas>
+
+    <!-- Floating Top Capsule Navigation Bar (matching pyaefolio.netlify.app) -->
+    <header class="top-capsule-nav toolbar">
+      <div
+        class="brand-badge"
+        id="btn-open-profile"
+        role="button"
+        tabindex="0"
+        title="View Pyae Phyo Hlaing Profile"
+      >
+        <img
+          src="/assets/Profile.jpg"
+          alt="Pyae Phyo Hlaing"
+          width="36"
+          height="36"
+          class="brand-avatar"
+        />
+        <div class="brand-text">
+          <span class="brand-name">
+            PyaeFolio <span class="brand-tag">3D MUSEUM</span>
+          </span>
+          <span class="brand-role">Pyae Phyo Hlaing • Full Stack</span>
+        </div>
+      </div>
+
+      <nav class="wing-pills" aria-label="Museum Wings Teleport">
+        <button type="button" class="wing-btn active" data-wing="rotunda">Atrium</button>
+        <button type="button" class="wing-btn" data-wing="projects">Projects (8)</button>
+        <button type="button" class="wing-btn" data-wing="skills">Skills</button>
+        <button type="button" class="wing-btn" data-wing="experience">Experience</button>
+        <button type="button" class="wing-btn" data-wing="contact">Contact &amp; CV</button>
+      </nav>
+
+      <div class="nav-actions">
+        <button
+          type="button"
+          class="action-pill live-visitors-pill"
+          id="btn-open-live-visitors"
+          title="View Live Online Visitors & Broadcast Chat"
+        >
+          <span class="live-pulse-dot" aria-hidden="true"></span>
+          <span id="live-visitors-count">1 Online</span>
+        </button>
+        <button
+          type="button"
+          class="action-pill passport-pill"
+          id="btn-open-passport"
+          title="Open Museum Passport & Directory"
+        >
+          <span class="pill-icon" aria-hidden="true">🎫</span>
+          <span id="passport-counter-text">0 / 8 Stamped</span>
+        </button>
+        <button
+          type="button"
+          class="action-pill char-pill"
+          id="btn-open-character"
+          title="Customize Visitor Character"
+        >
+          <span class="pill-icon" aria-hidden="true">🎨</span>
+          <span id="active-char-label">Customize Avatar</span>
+        </button>
+        <button
+          type="button"
+          class="action-pill helpbot-pill"
+          id="btn-open-helpbot"
+          title="Ask PyaeBot AI Guide (Google AI Studio + Q&As)"
+        >
+          <span class="pill-icon" aria-hidden="true">🤖</span>
+          <span>Ask AI</span>
+        </button>
+        <button
+          type="button"
+          class="icon-btn"
+          id="btn-toggle-gamepad"
+          title="Toggle On-Screen Mobile Controller"
+          aria-label="Toggle On-Screen Mobile Controller"
+        >
+          🎮
+        </button>
+        <button
+          type="button"
+          class="icon-btn"
+          id="btn-toggle-minimap"
+          title="Toggle Radar Minimap"
+          aria-label="Toggle Radar Minimap"
+        >
+          🗺️
+        </button>
+        <button
+          type="button"
+          class="icon-btn"
+          id="btn-toggle-theme"
+          title="Toggle Day / Night Museum Lighting"
+          aria-label="Toggle Museum Lighting"
+        >
+          🌙
+        </button>
+        <a
+          href="https://pyaefolio.netlify.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="cta-primary-link"
+          title="Open Classic 2D Web Portfolio"
+        >
+          2D Site ↗
+        </a>
+      </div>
+    </header>
+
+    <!-- Bottom-Left Live Radar Minimap & Controls Card -->
+    <aside class="hud-bottom-left" id="radar-minimap-panel">
+      <div class="minimap-card">
+        <div class="minimap-header">
+          <span class="minimap-title">MUSEUM RADAR</span>
+          <span class="minimap-coords" id="player-zone-label">Grand Rotunda</span>
+        </div>
+        <canvas id="minimapCanvas" width="176" height="176"></canvas>
+        <div class="controls-legend">
+          <span><kbd>WASD</kbd> / <kbd>Tap Floor</kbd> Walk</span>
+          <span><kbd>Shift</kbd> Sprint • <kbd>Space</kbd> Jump</span>
+          <span><kbd>Drag</kbd> Orbit • <kbd>E</kbd> Inspect</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Virtual Touch & Mobile Gamepad Controller Overlay -->
+    <div class="touch-controls-layer" id="touch-controls-layer" aria-label="Mobile Gamepad Controls">
+      <!-- Left Thumb: Hybrid 4-Way D-Pad + Analog Joystick -->
+      <div class="joystick-zone" id="joystick-zone">
+        <div class="gamepad-dpad-ring">
+          <button
+            type="button"
+            class="dpad-btn dpad-up"
+            id="btn-dpad-up"
+            aria-label="Walk Forward"
+          >
+            ▲
+          </button>
+          <button
+            type="button"
+            class="dpad-btn dpad-left"
+            id="btn-dpad-left"
+            aria-label="Walk Left"
+          >
+            ◀
+          </button>
+          <div class="joystick-base" id="joystick-base">
+            <div class="joystick-stick" id="joystick-stick"></div>
+          </div>
+          <button
+            type="button"
+            class="dpad-btn dpad-right"
+            id="btn-dpad-right"
+            aria-label="Walk Right"
+          >
+            ▶
+          </button>
+          <button
+            type="button"
+            class="dpad-btn dpad-down"
+            id="btn-dpad-down"
+            aria-label="Walk Backward"
+          >
+            ▼
+          </button>
+        </div>
+        <span class="joystick-hint">D-PAD OR DRAG STICK</span>
+      </div>
+
+      <!-- Right Thumb: Camera Orbit + Action Buttons Cluster -->
+      <div class="touch-action-cluster">
+        <div class="camera-orbit-row">
+          <button
+            type="button"
+            class="cam-orbit-btn"
+            id="btn-cam-left"
+            aria-label="Rotate Camera Left"
+          >
+            ⟲ Cam
+          </button>
+          <button
+            type="button"
+            class="cam-orbit-btn"
+            id="btn-cam-reset"
+            aria-label="Center Camera Behind Character"
+          >
+            🎯 Center
+          </button>
+          <button
+            type="button"
+            class="cam-orbit-btn"
+            id="btn-cam-right"
+            aria-label="Rotate Camera Right"
+          >
+            Cam ⟳
+          </button>
+        </div>
+
+        <div class="touch-action-buttons">
+          <button
+            type="button"
+            class="touch-action-btn btn-sprint"
+            id="btn-touch-sprint"
+            aria-label="Toggle Sprint"
+          >
+            ⚡ Sprint
+          </button>
+          <button
+            type="button"
+            class="touch-action-btn btn-jump"
+            id="btn-touch-jump"
+            aria-label="Jump"
+          >
+            ⬆ Jump
+          </button>
+          <button
+            type="button"
+            class="touch-action-btn btn-inspect"
+            id="btn-touch-inspect"
+            aria-label="Inspect Exhibit"
+          >
+            🔍 Inspect
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom-Center Proximity Exhibit Prompt -->
+    <div id="proximity-prompt" class="proximity-prompt hidden">
+      <div class="prompt-accent-dot" id="prompt-dot"></div>
+      <div class="prompt-info">
+        <span class="prompt-kicker" id="prompt-kicker">EXHIBIT IN RANGE</span>
+        <strong class="prompt-title" id="prompt-title">CareerHub</strong>
+        <span class="prompt-subtitle" id="prompt-subtitle">Full Stack • React, Vite, Material UI</span>
+      </div>
+      <button type="button" class="prompt-inspect-btn" id="btn-trigger-prompt">
+        Inspect <kbd>E</kbd>
+      </button>
+    </div>
+
+    <!-- Bottom-Right Quick Tour, Blame & AI Help Bot Controls -->
+    <aside class="hud-bottom-right">
+      <button
+        type="button"
+        class="tour-btn blame-hud-btn"
+        id="btn-hud-blame"
+        title="Trigger 3D Git Blame on nearest visitor or PyaeBot (or open Blame Roster)"
+      >
+        <span>🎯 Git Blame</span>
+      </button>
+      <button
+        type="button"
+        class="tour-btn helpbot-hud-btn"
+        id="btn-hud-helpbot"
+        title="Talk to PyaeBot AI Guide (Google AI Studio + Preserved Q&As)"
+      >
+        <span>🤖 AI Guide &amp; Q&amp;A</span>
+      </button>
+      <button
+        type="button"
+        class="tour-btn"
+        id="btn-next-exhibit"
+        title="Teleport to the next project exhibit"
+      >
+        <span>Next Exhibit →</span>
+      </button>
+    </aside>
+
+    <!-- Live 3D Blame Alert Toast Banner -->
+    <div id="blame-toast-banner" class="blame-toast-banner hidden" role="status" aria-live="polite">
+      <span class="blame-toast-badge">🎯 GIT BLAME</span>
+      <span class="blame-toast-text" id="blame-toast-text">Visitor blamed PyaeBot!</span>
+    </div>
+
+    <!-- 1. Full Character Customizer & Welcome Modal Dialog -->
+    <dialog id="character-dialog" closedby="any" aria-labelledby="character-dialog-title">
+      <div class="dialog-shell customizer-container">
+        <div class="dialog-top-bar">
+          <div>
+            <span class="dialog-eyebrow">WELCOME TO PYAEFOLIO 3D MUSEUM</span>
+            <h2 id="character-dialog-title">Customize Your 3D Museum Visitor</h2>
+          </div>
+          <form method="dialog">
+            <button
+              type="submit"
+              class="dialog-close-btn icon-button"
+              aria-label="Close character customizer"
+            >
+              ✕
+            </button>
+          </form>
+        </div>
+
+        <p class="dialog-lead">
+          Design your 3D visitor character before exploring <strong>Pyae Phyo Hlaing’s</strong> interactive portfolio museum. Changes update your 3D character in real time!
+        </p>
+
+        <!-- Quick Archetype Presets Row -->
+        <div class="preset-bar">
+          <span class="preset-bar-label">Quick Presets:</span>
+          <div class="preset-pills" id="character-preset-pills"></div>
+          <button type="button" class="secondary-action-btn randomize-btn" id="btn-randomize-char">
+            🎲 Randomize
+          </button>
+        </div>
+
+        <!-- Two-Column Responsive Customizer Grid (Container Query Driven) -->
+        <div class="customizer-studio-grid">
+          <!-- Left: Live Avatar Preview Stage -->
+          <div class="avatar-preview-stage">
+            <div class="preview-header">
+              <span class="preview-badge" id="preview-badge-pill">VIP RECRUITER</span>
+              <strong class="preview-name" id="preview-name-text">Alex (VIP Recruiter)</strong>
+            </div>
+            <canvas
+              id="avatarPreviewCanvas"
+              width="280"
+              height="300"
+              aria-label="Live custom avatar preview"
+            ></canvas>
+            <div class="preview-summary" id="preview-parts-summary">
+              Humanoid • Slick Hair • Glasses
+            </div>
+          </div>
+
+          <!-- Right: Modular Customization Controls -->
+          <div class="customizer-controls-panel">
+            <!-- Name & Badge -->
+            <div class="customizer-field-row">
+              <div class="field-group">
+                <label for="visitor-name-input">Visitor Nameplate</label>
+                <input
+                  type="text"
+                  id="visitor-name-input"
+                  maxlength="26"
+                  placeholder="e.g. Alex (Tech Recruiter)"
+                  value="Alex (VIP Recruiter)"
+                />
+              </div>
+              <div class="field-group">
+                <label for="visitor-badge-select">Role Badge</label>
+                <select id="visitor-badge-select">
+                  <option value="VIP RECRUITER">VIP RECRUITER</option>
+                  <option value="TECH LEAD">TECH LEAD</option>
+                  <option value="FULL STACK DEV">FULL STACK DEV</option>
+                  <option value="UI/UX CRITIC">UI/UX CRITIC</option>
+                  <option value="CURATOR BOT">CURATOR BOT</option>
+                  <option value="GUEST EXPLORER">GUEST EXPLORER</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Modular Gear Selectors -->
+            <div class="customizer-options-grid">
+              <div class="option-group">
+                <span class="option-label">Body Chassis</span>
+                <div class="chip-group" data-part="chassis">
+                  <button type="button" class="part-chip active" data-value="humanoid">🚶 Humanoid</button>
+                  <button type="button" class="part-chip" data-value="hover-bot">🤖 Hover-Bot</button>
+                </div>
+              </div>
+
+              <div class="option-group">
+                <span class="option-label">Headwear / Hair</span>
+                <div class="chip-group" data-part="headwear">
+                  <button type="button" class="part-chip" data-value="none">None</button>
+                  <button type="button" class="part-chip active" data-value="slick-hair">💈 Hair</button>
+                  <button type="button" class="part-chip" data-value="headphones">🎧 Headphones</button>
+                  <button type="button" class="part-chip" data-value="beret">🎨 Beret</button>
+                  <button type="button" class="part-chip" data-value="crown">👑 Crown</button>
+                  <button type="button" class="part-chip" data-value="antenna">📡 Antenna</button>
+                </div>
+              </div>
+
+              <div class="option-group">
+                <span class="option-label">Eyewear / Visor</span>
+                <div class="chip-group" data-part="eyewear">
+                  <button type="button" class="part-chip" data-value="none">None</button>
+                  <button type="button" class="part-chip active" data-value="glasses">👓 Glasses</button>
+                  <button type="button" class="part-chip" data-value="cyber-visor">🥽 Cyber Visor</button>
+                  <button type="button" class="part-chip" data-value="sunglasses">🕶️ Shades</button>
+                </div>
+              </div>
+
+              <div class="option-group">
+                <span class="option-label">Back / Shoulder Gear</span>
+                <div class="chip-group" data-part="backwear">
+                  <button type="button" class="part-chip active" data-value="none">None</button>
+                  <button type="button" class="part-chip" data-value="tech-pack">🎒 Tech Pack</button>
+                  <button type="button" class="part-chip" data-value="cape">🦸 Holo-Cape</button>
+                  <button type="button" class="part-chip" data-value="scarf">🧣 Scarf</button>
+                  <button type="button" class="part-chip" data-value="wings">🪽 Cyber Wings</button>
+                </div>
+              </div>
+
+              <div class="option-group">
+                <span class="option-label">3D Floating Companion</span>
+                <div class="chip-group" data-part="companion">
+                  <button type="button" class="part-chip active" data-value="none">None</button>
+                  <button type="button" class="part-chip" data-value="mini-drone">🛸 Mini-Drone</button>
+                  <button type="button" class="part-chip" data-value="holo-cube">💎 Holo-Cube</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Color Swatches & Pickers -->
+            <div class="color-customizer-row">
+              <div class="color-Section">
+                <div class="color-label-row">
+                  <label for="input-primary-color">Outfit Color</label>
+                  <input type="color" id="input-primary-color" value="#0066FF" aria-label="Custom Primary Outfit Color" />
+                </div>
+                <div class="swatch-row" id="swatches-primary"></div>
+              </div>
+
+              <div class="color-Section">
+                <div class="color-label-row">
+                  <label for="input-secondary-color">Accent / Glow</label>
+                  <input type="color" id="input-secondary-color" value="#38BDF8" aria-label="Custom Accent Glow Color" />
+                </div>
+                <div class="swatch-row" id="swatches-secondary"></div>
+              </div>
+
+              <div class="color-Section">
+                <div class="color-label-row">
+                  <label for="input-skin-color">Skin / Chassis</label>
+                  <input type="color" id="input-skin-color" value="#F6C9A8" aria-label="Custom Skin or Chassis Color" />
+                </div>
+                <div class="swatch-row" id="swatches-skin"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dialog-footer">
+          <div class="footer-tip">
+            Works on Desktop (<kbd>WASD</kbd> / Click) &amp; Mobile Touch (On-Screen Joystick / Tap Floor).
+          </div>
+          <button type="button" class="primary-action-btn" id="btn-confirm-character" autofocus>
+            Save &amp; Enter 3D Museum →
+          </button>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- 2. Exhibit / Profile / Experience Inspection Modal Dialog -->
+    <dialog id="exhibit-dialog" closedby="any" aria-labelledby="exhibit-dialog-title">
+      <div class="dialog-shell exhibit-container" id="exhibit-dialog-content">
+        <div class="dialog-top-bar">
+          <div>
+            <span class="dialog-eyebrow" id="exhibit-modal-eyebrow">PROJECT EXHIBIT</span>
+            <h2 id="exhibit-dialog-title">Exhibit Title</h2>
+          </div>
+          <form method="dialog">
+            <button
+              type="submit"
+              class="dialog-close-btn icon-button"
+              autofocus
+              aria-label="Close exhibit details"
+            >
+              ✕
+            </button>
+          </form>
+        </div>
+        <div id="exhibit-modal-body" class="exhibit-modal-body"></div>
+      </div>
+    </dialog>
+
+    <!-- 3. Museum Passport, Directory & Guestbook Modal Dialog -->
+    <dialog id="passport-dialog" closedby="any" aria-labelledby="passport-dialog-title">
+      <div class="dialog-shell passport-container">
+        <div class="dialog-top-bar">
+          <div>
+            <span class="dialog-eyebrow">VISITOR PASSPORT &amp; QUICK TELEPORT</span>
+            <h2 id="passport-dialog-title">PyaeFolio Exhibition Directory</h2>
+          </div>
+          <form method="dialog">
+            <button
+              type="submit"
+              class="dialog-close-btn icon-button"
+              autofocus
+              aria-label="Close museum passport"
+            >
+              ✕
+            </button>
+          </form>
+        </div>
+
+        <p class="dialog-lead" id="passport-progress-summary">
+          Inspect all 8 project exhibits in the North Wing to complete your PyaeFolio Museum Passport, or tap any exhibit below to teleport directly to its pedestal!
+        </p>
+
+        <div class="passport-grid" id="passport-grid-container"></div>
+
+        <div class="guestbook-section">
+          <h3>Visitor Guestbook Wall</h3>
+          <form id="guestbook-form" class="guestbook-form">
+            <input
+              type="text"
+              id="guestbook-message-input"
+              maxlength="120"
+              placeholder="Leave a public note or reaction in the museum guestbook..."
+              required
+            />
+            <button type="submit" class="primary-action-btn">Post Note</button>
+          </form>
+          <div class="guestbook-entries" id="guestbook-entries-list"></div>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- 4. PyaeBot AI Museum Concierge Modal (Google AI Studio API + Preserved Q&As) -->
+    <dialog id="helpbot-dialog" closedby="any" aria-labelledby="helpbot-dialog-title">
+      <div class="dialog-shell helpbot-container">
+        <div class="dialog-top-bar">
+          <div class="helpbot-header-left">
+            <div class="helpbot-avatar-badge" aria-hidden="true">🤖</div>
+            <div>
+              <div class="helpbot-eyebrow-row">
+                <span class="dialog-eyebrow">GRAND ROTUNDA AI CONCIERGE</span>
+                <span class="helpbot-mode-badge" id="helpbot-status-pill">⚡ Preserved Q&amp;A + Gemini AI</span>
+              </div>
+              <h2 id="helpbot-dialog-title">PyaeBot — AI Museum Guide</h2>
+            </div>
+          </div>
+          <div class="helpbot-header-actions">
+            <button
+              type="button"
+              class="secondary-action-btn compact-btn"
+              id="btn-teleport-helpbot"
+              title="Teleport your character to PyaeBot in the Grand Rotunda"
+            >
+              📍 Visit 3D Bot
+            </button>
+            <form method="dialog">
+              <button
+                type="submit"
+                class="dialog-close-btn icon-button"
+                aria-label="Close AI Help Bot"
+              >
+                ✕
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Preserved Q&As Quick-Select Chips -->
+        <div class="helpbot-qa-section">
+          <div class="helpbot-qa-header">
+            <span class="helpbot-section-label">⚡ Preserved Portfolio Q&amp;As (Tap any topic for instant answer):</span>
+          </div>
+          <div class="helpbot-qa-chips" id="helpbot-qa-chips"></div>
+        </div>
+
+        <!-- Conversation Messages Log -->
+        <div class="helpbot-chat-log" id="helpbot-chat-log" aria-live="polite"></div>
+
+        <!-- Custom Question Input Form -->
+        <form id="helpbot-chat-form" class="helpbot-chat-form">
+          <input
+            type="text"
+            id="helpbot-question-input"
+            maxlength="280"
+            placeholder="Ask PyaeBot anything about Pyae's projects, skills, internships, or museum..."
+            required
+          />
+          <button type="submit" class="primary-action-btn" id="btn-send-helpbot">
+            Ask AI →
+          </button>
+          <button
+            type="button"
+            class="secondary-action-btn"
+            id="btn-clear-helpbot"
+            title="Reset conversation history"
+          >
+            Reset
+          </button>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- 5. Multi-User Live Visitors Roster & Overhead Chat Modal -->
+    <dialog id="live-visitors-dialog" closedby="any" aria-labelledby="live-visitors-dialog-title">
+      <div class="dialog-shell live-visitors-container">
+        <div class="dialog-top-bar">
+          <div>
+            <span class="dialog-eyebrow">MULTI-USER REAL-TIME PRESENCE</span>
+            <h2 id="live-visitors-dialog-title">Live Museum Visitors &amp; Chat</h2>
+          </div>
+          <form method="dialog">
+            <button
+              type="submit"
+              class="dialog-close-btn icon-button"
+              aria-label="Close Live Visitors"
+            >
+              ✕
+            </button>
+          </form>
+        </div>
+
+        <p class="dialog-lead">
+          Every character walking around the museum is a real live visitor! Open another tab, browser, or device on the network to see real-time 3D movement, custom avatars, and overhead chat bubbles synced live.
+        </p>
+
+        <!-- Active Live Visitors & Blame Roster Grid -->
+        <div class="live-visitors-section">
+          <div class="blame-reason-toolbar">
+            <label for="blame-reason-select" class="helpbot-section-label">🎯 3D Git Blame Reason:</label>
+            <select id="blame-reason-select" class="blame-reason-select"></select>
+          </div>
+          <div class="helpbot-qa-header">
+            <span class="helpbot-section-label" id="live-roster-heading">🟢 Currently Exploring (1 Online + PyaeBot)</span>
+          </div>
+          <div class="live-visitors-grid" id="live-visitors-grid"></div>
+        </div>
+
+        <!-- Quick Overhead Emote / Status Chips -->
+        <div class="helpbot-qa-section">
+          <span class="helpbot-section-label">💬 Quick Overhead Emotes (Broadcast above your 3D avatar):</span>
+          <div class="helpbot-qa-chips" id="live-emote-chips"></div>
+        </div>
+
+        <!-- Live Visitor Chat Feed -->
+        <div class="live-chat-feed" id="live-chat-feed" aria-live="polite"></div>
+
+        <!-- Broadcast Message Form -->
+        <form id="live-chat-form" class="helpbot-chat-form">
+          <input
+            type="text"
+            id="live-chat-input"
+            maxlength="100"
+            placeholder="Say something to all live visitors (updates your 3D speech bubble)..."
+            required
+          />
+          <button type="submit" class="primary-action-btn">
+            Broadcast 💬
+          </button>
+        </form>
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
